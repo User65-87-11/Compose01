@@ -6,7 +6,17 @@ data class TrainingInterval(
 
     ) {
     enum class IntervalType {
-        SHORT, LONG
+        REPREST, REP,PREP,SETREST,FINISH;
+
+        fun stringVal():String{
+            return when(this){
+                REPREST-> "Interval rest"
+                REP-> "Training time"
+                PREP-> "Start in..."
+                SETREST-> "Set rest"
+                FINISH -> "Finished"
+            }
+        }
     }
 }
 

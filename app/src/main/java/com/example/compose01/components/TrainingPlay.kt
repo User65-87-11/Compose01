@@ -1,8 +1,14 @@
 package com.example.compose01.components
 
+import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -15,9 +21,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.neverEqualPolicy
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,114 +50,122 @@ fun TrainingPlay(
     var title by remember {
         mutableStateOf(data.title)
     }
-    var repTime by remember { mutableStateOf(data.repTime.toString()) }
-    var repNum by remember { mutableStateOf(data.repNum.toString()) }
-    var repRest by remember { mutableStateOf(data.repRest.toString()) }
-    var setNum by remember { mutableStateOf(data.setNum.toString()) }
-    var setRest by remember { mutableStateOf(data.setRest.toString()) }
+
+    var totalTurns by remember { mutableStateOf(data.repNum * data.setNum) }
+    var totalSets by remember { mutableStateOf(data.setNum) }
+    var trainingTotalTime by remember { mutableIntStateOf(data.totalTime()) }
 
     var openAlertDialog by remember { mutableStateOf(false) }
 
-
-    var smallProgress by remember {
-        mutableFloatStateOf(0f)
-    }
-    var largeProgress by remember {
-        mutableFloatStateOf(0f)
-    }
+    var formattedTotalTime =
+        String.format("%02d:%02d", data.totalTime() / 60, data.totalTime() % 60)
 
     var totalTime by remember {
         mutableIntStateOf(5)
     }
     var counter by remember {
-        mutableIntStateOf(5)
-    }
-    var counterSec by remember {
-        mutableIntStateOf(0)
-    }
-    var isStartedLarge by remember {
-        mutableStateOf(false)
-    }
-    var isStartedSmall by remember {
-        mutableStateOf(false)
-    }
-    var currentLoop by remember {
-        mutableIntStateOf(0)
-    }
-    var currentSettings by remember {
-        mutableStateOf(vm.listOfIntervals[currentLoop])
+        mutableStateOf(0, neverEqualPolicy())
     }
 
-    /*
-    * isStarted
-    * pick current settings
-    * increment current loop after launched effect is complete
-    * */
+
+    var currentLoop by remember {
+        mutableStateOf(0)
+    }
+
     var isStarted by remember {
         mutableStateOf(false)
     }
-//    var inter by remember {
-//        mutableStateOf( data.intervalList())
-//    }
+    var loopType by remember {
+        mutableStateOf(vm.listOfIntervals[0].type.stringVal())
+    }
+    var totalProgAnim by remember {
+        mutableStateOf(Animatable(0f))
+
+
+    }
+
+
+
+
+
+
+
     LaunchedEffect(isStarted, currentLoop) {
         if (isStarted) {
             if (currentLoop < vm.listOfIntervals.size) {
 
+                val temp = vm.listOfIntervals[currentLoop]
 
-                currentSettings = vm.listOfIntervals[currentLoop]
 
-                counterSec = currentSettings.interval
-                counter = counterSec * 1000
-
+                counter = temp.interval
                 totalTime = counter
-                when (currentSettings.type) {
-                    TrainingInterval.IntervalType.SHORT -> {
-                        isStartedSmall = true
+                Log.d("animateTo", "1f")
+
+
+                loopType = temp.type.stringVal()
+
+                if (temp.type != TrainingInterval.IntervalType.FINISH && temp.type != TrainingInterval.IntervalType.PREP) {
+
+
+
+
+                    if (temp.type == TrainingInterval.IntervalType.REP) {
+                        totalTurns--
+
+                        if (  (1 + totalTurns ) % data.setNum ==0  || totalTurns ==0) {
+
+                            if(totalSets>0)
+                            {
+                                totalSets--
+                            }
+
+                        }
                     }
 
-                    TrainingInterval.IntervalType.LONG -> {
-                        isStartedLarge = true
-                    }
+
+                    totalProgAnim = Animatable(0f)
+                    totalProgAnim.animateTo(
+                        1f,
+                        animationSpec = tween(
+                            totalTime * 1000, easing = LinearEasing
+                        ),
+                    )
 
                 }
-            }else
-            {
-                isStarted = false;
-            }
-        }
-    }
-    LaunchedEffect(isStartedLarge, counter) {
 
-        if (isStartedLarge) {
-            if (counter > 0) {
-                delay(100)
-                counter -= 100
-                if(counter % 1000 == 0)
-                counterSec -= 1
-                largeProgress = counter .toFloat() / totalTime .toFloat()
             } else {
-
-                isStartedLarge = false
-                currentLoop += 1
+                isStarted = false
             }
         }
     }
-    LaunchedEffect(isStartedSmall, counter) {
 
-        if (isStartedSmall) {
+
+    LaunchedEffect(isStarted, counter) {
+
+        if (isStarted) {
             if (counter > 0) {
-                delay(100)
-                counter -= 100
-                if(counter % 1000 == 0)
-                counterSec -=1
-                smallProgress = counter .toFloat() / totalTime .toFloat()
-            } else {
+                delay(1000)
+                counter -= 1
 
-                isStartedSmall = false
+                if (loopType != TrainingInterval.IntervalType.PREP.stringVal()
+                    &&
+                    loopType != TrainingInterval.IntervalType.FINISH.stringVal()
+
+                    ) {
+                    trainingTotalTime--
+                }
+
+            } else {
                 currentLoop += 1
+
+                Log.d("currentLoop", "+1")
+                Log.d("totalProgAnim", totalProgAnim.value.toString())
+
+
             }
         }
     }
+
 
 
     OutlinedCard(
@@ -167,8 +181,17 @@ fun TrainingPlay(
         ) {
 
             Text(text = title)
-
-
+            Text(
+                text = "Total time: ${
+                    String.format(
+                        "%02d:%02d",
+                        trainingTotalTime / 60,
+                        trainingTotalTime % 60
+                    )
+                } / ${formattedTotalTime}"
+            )
+            Text(text = "Total reps: ${totalTurns} / ${data.repNum * data.setNum}")
+            Text(text = "Sets: ${totalSets} / ${data.setNum}")
 
 
             Box(
@@ -187,25 +210,25 @@ fun TrainingPlay(
                     shape = CircleShape,
                 ) {}
                 CircularProgressIndicator(
+
                     modifier = Modifier.size(250.dp),
                     strokeWidth = 20.dp,
-                    trackColor = Color.Red,
+                    trackColor = Color.DarkGray,
                     strokeCap = StrokeCap.Round,
-                    progress = { largeProgress },
-                    color = Color.Yellow,
-                )
-                CircularProgressIndicator(
-                    modifier = Modifier.size(200.dp),
-                    strokeWidth = 10.dp,
-                    trackColor = Color.Green,
-                    strokeCap = StrokeCap.Round,
-                    progress = { smallProgress },
-                    color = Color.Red,
-                )
+                    progress = { totalProgAnim.value },
+                    color = Color.Gray,
+
+                    )
+
                 Box(
                     modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "00:${String.format("%02d", counterSec)}", fontSize = 50.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = loopType)
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(text = "00:${String.format("%02d", counter)}", fontSize = 50.sp)
+                    }
+
                 }
 
 

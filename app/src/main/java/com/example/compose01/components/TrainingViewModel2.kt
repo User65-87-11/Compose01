@@ -20,27 +20,32 @@ class TrainingViewModel2 : ViewModel() {
 
     var listOfIntervals = mutableListOf<TrainingInterval>()
 
+
+
     init {
         setLiveData()
     }
 
     fun intervalList(edited: TrainingData): List<TrainingInterval> {
+        listOfIntervals.clear()
         val l = listOfIntervals
         // start er
-        l.add(TrainingInterval(5, TrainingInterval.IntervalType.SHORT))
+        l.add(TrainingInterval(5, TrainingInterval.IntervalType.PREP))
 
         for (i in 1..edited.setNum) {
             for (a in 1..edited.repNum) {
-                l.add(TrainingInterval(edited.repTime, TrainingInterval.IntervalType.LONG))
-                if (a == edited.repNum) {
-                    l.add(TrainingInterval(edited.setRest, TrainingInterval.IntervalType.SHORT))
+                l.add(TrainingInterval(edited.repTime, TrainingInterval.IntervalType.REP))
 
-                } else {
-                    l.add(TrainingInterval(edited.repRest, TrainingInterval.IntervalType.SHORT))
-                }
+                    l.add(TrainingInterval(edited.repRest, TrainingInterval.IntervalType.REPREST))
+
             }
+            l.removeAt(l.size - 1)
+            l.add(TrainingInterval(edited.setRest, TrainingInterval.IntervalType.SETREST))
         }
         l.removeAt(l.size - 1)
+
+        l.add(TrainingInterval(0, TrainingInterval.IntervalType.FINISH))
+
         return l
     }
 
@@ -48,6 +53,7 @@ class TrainingViewModel2 : ViewModel() {
 
 
         repo.update(oldTraining, newTraining)
+
         setLiveData()
 
 
@@ -75,6 +81,7 @@ class TrainingViewModel2 : ViewModel() {
 
     private fun setLiveData(find: String = "") {
         items2.clear()
+       // items2 = mutableStateListOf<TrainingData>()
         repo.trainings.forEach { el ->
             if (find.isEmpty()) {
                 items2.add(el)

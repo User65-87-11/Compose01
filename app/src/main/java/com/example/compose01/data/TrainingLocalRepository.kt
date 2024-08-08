@@ -7,8 +7,8 @@ class TrainingLocalRepository {
         TrainingData(
 
             title = "Ring trenn",
-            repNum = 3,
-            setNum = 3,
+            repNum = 1,
+            setNum = 2,
             setRest = 5
         )
     )

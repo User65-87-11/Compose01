@@ -1,5 +1,6 @@
 package com.example.compose01.components
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,8 @@ fun TrainingApp(
             navController = navController,
             startDestination = "home",
         ) {
+
+
             composable(
                 route = "home",
 
@@ -52,6 +55,8 @@ fun TrainingApp(
                     }
 
                     items(viewModel.items2) { dd ->
+
+
                         TrainingComponent(data = dd, modifier = Modifier, onStart = {
                             navController.navigate(route = "play")
                             viewModel.onEdit(dd)

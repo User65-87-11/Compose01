@@ -158,14 +158,6 @@ fun TrainingComponent(
             }
             if (expanded) {
 
-//                var title by remember {
-//                    mutableStateOf(data.title)
-//                }
-//                var repTime by remember { mutableStateOf(data.repTime.toString()) }
-//                var repNum by remember { mutableStateOf(data.repNum.toString()) }
-//                var repRest by remember { mutableStateOf(data.repRest.toString()) }
-//                var setNum by remember { mutableStateOf(data.setNum.toString()) }
-//                var setRest by remember { mutableStateOf(data.setRest.toString()) }
 
 
              //   Text("Title: $title")
@@ -174,6 +166,8 @@ fun TrainingComponent(
                 Text("Repetition number: ${data.repNum} times")
                 Text("Set rest: ${data.setRest} sec")
                 Text("Set number: ${data.setNum} times")
+                Text("Total time: ${String.format("%02d:%02d",data.totalTime()/60,data.totalTime()%60)}")
+
 
                 Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth())
                 {
